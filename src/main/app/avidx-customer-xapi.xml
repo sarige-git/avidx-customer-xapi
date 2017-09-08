@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+   
+    <apikit:config name="avidx-customer-xapi-config" raml="avidx-customer-xapi.raml" consoleEnabled="false" doc:name="Router"/>
+    <flow name="avidx-customer-xapi-main">
+        <http:listener config-ref="avidx-customer-xapi-httpListenConfig" path="${http.base.path}/*" doc:name="HTTP"/>
+        <apikit:router config-ref="avidx-customer-xapi-config" doc:name="APIkit Router"/>
+        <exception-strategy ref="avidx-customer-xapi-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="avidx-customer-xapi-console">
+        <http:listener config-ref="avidx-customer-xapi-httpListenConfig" path="${http.base.path}/console/*" doc:name="HTTP"/>
+        <apikit:console config-ref="avidx-customer-xapi-config" doc:name="APIkit Console"/>
+    </flow>
+    <flow name="get:/version:avidx-customer-xapi-config">
+        <logger message="********* Received request for get:/version API ***********" level="INFO" doc:name="LogStart"/>
+        <set-payload value="{
+&quot;version&quot;:&quot;1&quot;,
+&quot;buildNumber&quot;:&quot;1.0&quot;,
+&quot;commit&quot;:&quot;1.0&quot;
+}" doc:name="Set Payload"/>
+        <logger message="*********** Completed the process of get:/version API Successfully ***********" level="INFO" doc:name="LogEnd"/>
+    </flow>
+    <flow name="get:/customer/{id}:avidx-customer-xapi-config">
+        <logger message="********* Received request for get:/customer/#[flowVars.id] API ***********" level="INFO" doc:name="LogStart"/>
+        <set-payload value="{
+&quot;name&quot;:&quot;Siva&quot;,
+&quot;no&quot;:#[flowVars.id],
+&quot;address&quot;:&quot;chorlotte&quot;
+}" doc:name="Set Payload"/>
+        <logger message="*********** Completed the process of get:/customer/{id} API Successfully ***********" level="INFO" doc:name="LogEnd"/>
+    </flow>
+    <flow name="post:/customer:avidx-customer-xapi-config">
+        <logger message="********* Received request for post:/customer API ***********" level="INFO" doc:name="LogStart"/>
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <logger message="*********** Completed the process of post:/customer API Successfully ***********" level="INFO" doc:name="LogEnd"/>
+    </flow>
+    <apikit:mapping-exception-strategy name="avidx-customer-xapi-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+</mule>
